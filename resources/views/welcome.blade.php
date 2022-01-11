@@ -14,7 +14,7 @@
                             <button class="btn btn-success" type="submit" id="button-addon2">PERIKSA</button>
                         </div>
                         <div id="passwordHelpBlock" class="form-text">
-                            <span class="text-danger">*</span> Masukan NIK/KK/Nama Lengkap Pasien
+                            <span class="text-danger">*</span> Masukan NIK/KK Pasien
                         </div>
                     </form>
 
