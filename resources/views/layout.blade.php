@@ -14,5 +14,7 @@
 
     <script src="{{ asset('bootstrap/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('js/app.js') }}"></script>
+    @stack('scripts')
+
 </body>
 </html>

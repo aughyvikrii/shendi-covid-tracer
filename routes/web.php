@@ -23,3 +23,4 @@ Route::get('/register', [RegisterController::class, 'view'])->name('register');
 Route::post('/register', [RegisterController::class, 'action'])->name('register.action');
 
 Route::get("kk/{id}", [MainController::class, 'kk_detail'])->name('kk');
+Route::post('update_covid_status/{id}', [RegisterController::class, 'update_covid_status'])->name('update_covid_status');

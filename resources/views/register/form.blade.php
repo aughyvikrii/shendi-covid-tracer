@@ -1,7 +1,7 @@
 @extends('layout')
 
 @section('content')
-<div class="container m-auto">
+<div class="container m-auto pb-5 pt-2">
     <div class="row">
         <div class="col-sm-12 col-lg-8 offset-lg-2">
             <h3 class="text-bold">Formulir Pasien</h3>
@@ -20,7 +20,7 @@
                     </div>
                 @endif
 
-                    <form action="{{ route('register.action') }}" method="POST" class="row g-3">
+                    <form action="{{ route('register.action') }}" method="POST" class="row g-3" enctype="multipart/form-data">
                         @csrf
                         <div class="col-sm-12">
                             <h4>Data Diri</h4>
@@ -155,13 +155,17 @@
                             <h4>Informasi Covid-19</h4>
                         </div>
 
-                        <div class="col-sm-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="yes" id="on_covid" name="on_covid"/>
-                                <label class="form-check-label" for="flexCheckChecked">
-                                    Centang input ini jika pasien sedang terjangkit virus covid-19
-                                </label>
-                            </div>
+                        <div class="col-sm-12 col-md-4">
+                            <label for="covid_status" class="form-label">Status covid-19 <span class="text-danger">*</span></label>
+                            <select id="covid_status" name="covid_status" class="form-select" required>
+                                <option value="never_infected" {{ old('covid_status') === 'never_infected' ? 'selected' : '' }}>Belum pernah terjangkit</option>
+                                <option value="being_infected" {{ old('covid_status') === 'being_infected' ? 'selected' : '' }}>Sedang terjangkit</option>
+                                <option value="been_infected" {{ old('covid_status') === 'been_infected' ? 'selected' : '' }}>Pernah terjangkit</option>
+                            </select>
+                        </div>
+
+                        <div class="col-sm-12" id="covid_input_section">
+                            
                         </div>
 
                         <div class="col-12 text-end">
@@ -175,3 +179,59 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/jquery.min.js') }}"></script>
+    <script>
+        const covid_status = $('#covid_status')
+        const covid_input_section = $('#covid_input_section');
+
+        const field_being_infected = `<div class="row g-2">
+            <div class="col-sm-12 col-md-6">
+                <label for="infected_date_start" class="form-label">Tgl Positif Covid <span class="text-danger">*</span></label>
+                <input type="date" id="infected_date_start" name="infected_date_start" class="form-control" value="{{{ old('infected_date_start') }}}" required/>
+            </div>
+
+            <div class="col-sm-12 col-md-6">
+                <label for="covid_infected_start" class="form-label">Hasil Test PCR/Antigen <span class="text-danger">*</span></label>
+                <input type="file" name="covid_infected_start" id="covid_infected_start" class="form-control" required>
+            </div>
+        </div>`;
+
+        const field_been_infected = `<div class="row g-2">
+            <div class="col-sm-12 col-md-6">
+                <label for="infected_date_start" class="form-label">Tgl Positif Covid <span class="text-danger">*</span></label>
+                <input type="date" id="infected_date_start" name="infected_date_start" class="form-control" value="{{{ old('infected_date_start') }}}" required/>
+            </div>
+
+            <div class="col-sm-12 col-md-6">
+                <label for="covid_infected_start" class="form-label">Hasil Test PCR/Antigen <span class="text-danger">*</span></label>
+                <input type="file" name="covid_infected_start" id="covid_infected_start" class="form-control" required>
+            </div>
+
+            <div class="col-sm-12 col-md-6">
+                <label for="infected_date_end" class="form-label">Tgl Sembuh Covid <span class="text-danger">*</span></label>
+                <input type="date" id="infected_date_end" name="infected_date_end" class="form-control" value="{{{ old('infected_date_end') }}}" required/>
+            </div>
+
+            <div class="col-sm-12 col-md-6">
+                <label for="covid_infected_end" class="form-label">Hasil Test PCR/Antigen <span class="text-danger">*</span></label>
+                <input type="file" name="covid_infected_end" id="covid_infected_end" class="form-control" required>
+            </div>
+        </div>`;
+
+        covid_status.on('change', () => {
+            let val = covid_status.val();
+
+            if(val === 'being_infected') {
+                covid_input_section.html(field_being_infected);
+            } else if (val === 'been_infected') {
+                covid_input_section.html(field_been_infected);
+            } else {
+                covid_input_section.html('')
+            }
+        });
+
+        covid_status.change();
+    </script>
+@endpush

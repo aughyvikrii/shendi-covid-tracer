@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container m-auto">
-    <div class="row">
+    <div class="row g-2">
         <div class="col-sm-12 col-lg-6 offset-lg-3">
             <div class="card">
                 <div class="card-body">
@@ -17,7 +17,15 @@
                             <span class="text-danger">*</span> Masukan NIK/KK/Nama Lengkap Pasien
                         </div>
                     </form>
+
                 </div>
+            </div>
+        </div>
+
+        <div class="col-sm-12">
+            <div class="text-center">
+                <img src="/images/logo_unibi.jpeg" alt="Unibi" class="img-thumbnail img-fluid logo">
+                <img src="/images/logo_klinik.jpeg" alt="Unibi" class="img-thumbnail img-fluid logo">
             </div>
         </div>
     </div>

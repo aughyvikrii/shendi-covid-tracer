@@ -17,7 +17,7 @@
                         @foreach($family_members as $item)
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="member_{{$item->id}}">
-                                <button class="accordion-button collapsed {{ $item->on_covid ? 'bg-danger' : ''}}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{$item->id}}" aria-expanded="false" aria-controls="collapse_{{$item->id}}">
+                                <button class="accordion-button collapsed {{ $item->covid_status === 'being_infected' ? 'bg-danger' : ( $item->covid_status === 'been_infected' ? 'bg-warning' : '' )}}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{$item->id}}" aria-expanded="false" aria-controls="collapse_{{$item->id}}">
                                     {{$item->nik}} | {{ $item->name }}
                                 </button>
                             </h2>
@@ -51,14 +51,74 @@
                                         <dt class="col-sm-12 col-md-3">Jenis Kelamin</dt>
                                         <dd class="col-sm-12 col-md-9">{{ @$item->gender->name ?: '-' }}</dd>
 
-                                        <dt class="col-sm-12 col-md-3">Terjangkit Covid-19?</dt>
-                                        <dd class="col-sm-12 col-md-9">{{ @$item->on_covid ? 'Ya' : 'Tidak' }}</dd>
+                                        <dt class="col-sm-12 col-md-3">Status Covid-19?</dt>
+                                        <dd class="col-sm-12 col-md-9">
+                                            @switch($item->covid_status)
+                                                @case('never_infected')
+                                                    Tidak Pernah Terjangkit
+                                                    @break
+                                                @case('being_infected')
+                                                    Sedang Terjangkit
+                                                    @break
+                                                @case('been_infected')
+                                                    Pernah Terjangkit
+                                                    @break
+                                                @default
+                                                    Tidak Pernah Terjangkit
+                                            @endswitch
+                                        </dd>
+
+                                        @if($item->covid_status === 'being_infected')
+                                        <dt class="col-sm-12 col-md-3">Tgl awal positif</dt>
+                                        <dd class="col-sm-12 col-md-9">{{ _date_format($item->infected_date_start, 'l, d F Y') }}</dd>
+                                        
+                                        <dt class="col-sm-12 col-md-3">Bukti Terjangkit</dt>
+                                        <dd class="col-sm-12 col-md-9">
+                                            <a href="{{ asset('files/'. $item->covid_infected_start) }}" target="__blank">Lihat Bukti</a>
+                                        </dd>
+                                        @elseif($item->covid_status === 'been_infected')
+                                        <dt class="col-sm-12 col-md-3">Tgl awal positif</dt>
+                                        <dd class="col-sm-12 col-md-9">{{ _date_format($item->infected_date_start, 'l, d F Y') }}</dd>
+                                        
+                                        <dt class="col-sm-12 col-md-3">Bukti Terjangkit</dt>
+                                        <dd class="col-sm-12 col-md-9">
+                                            <a href="{{ asset('files/'. $item->covid_infected_start) }}" target="__blank">Lihat Bukti</a>
+                                        </dd>
+
+                                        <dt class="col-sm-12 col-md-3">Tgl sembuh</dt>
+                                        <dd class="col-sm-12 col-md-9">{{ _date_format($item->infected_date_end, 'l, d F Y') }}</dd>
+                                        
+                                        <dt class="col-sm-12 col-md-3">Bukti sembuh</dt>
+                                        <dd class="col-sm-12 col-md-9">
+                                            <a href="{{ asset('files/'. $item->covid_infected_end) }}" target="__blank">Lihat Bukti</a>
+                                        </dd>
+                                        @endif
                                         
                                         <dt class="col-sm-12 col-md-3">Tgl Ditambah</dt>
-                                        <dd class="col-sm-12 col-md-9">{{ \Carbon\Carbon::parse($item->created_at)->translatedFormat('l, d F Y H:i') }}</dd>
+                                        <dd class="col-sm-12 col-md-9">{{ _date_format($item->created_at, 'l, d F Y - H:i') }}</dd>
 
                                     </dl>
 
+                                    @if($item->covid_status === 'being_infected')
+                                        <form action="/update_covid_status/{{$item->id}}" method="post" enctype="multipart/form-data">
+                                            @csrf
+                                            <div class="row g-2">
+                                                <div class="col-sm-12 col-md-6">
+                                                    <label for="infected_date_end" class="form-label">Tgl Sembuh Covid <span class="text-danger">*</span></label>
+                                                    <input type="date" id="infected_date_end" name="infected_date_end" class="form-control" value="{{{ old('infected_date_end') }}}" required/>
+                                                </div>
+
+                                                <div class="col-sm-12 col-md-6">
+                                                    <label for="covid_infected_end" class="form-label">Hasil Test PCR/Antigen <span class="text-danger">*</span></label>
+                                                    <input type="file" name="covid_infected_end" id="covid_infected_end" class="form-control" required>
+                                                </div>
+
+                                                <div class="col-12 text-end">
+                                                    <button type="submit" class="btn btn-success ">Update Status Covid</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>
