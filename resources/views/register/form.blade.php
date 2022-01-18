@@ -194,7 +194,7 @@
 
             <div class="col-sm-12 col-md-6">
                 <label for="covid_infected_start" class="form-label">Hasil Test PCR/Antigen <span class="text-danger">*</span></label>
-                <input type="file" name="covid_infected_start" id="covid_infected_start" class="form-control" required>
+                <input type="file" accept="image/*" name="covid_infected_start" id="covid_infected_start" class="form-control" required>
             </div>
         </div>`;
 
@@ -206,7 +206,7 @@
 
             <div class="col-sm-12 col-md-6">
                 <label for="covid_infected_start" class="form-label">Hasil Test PCR/Antigen <span class="text-danger">*</span></label>
-                <input type="file" name="covid_infected_start" id="covid_infected_start" class="form-control" required>
+                <input type="file" accept="image/*" name="covid_infected_start" id="covid_infected_start" class="form-control" required>
             </div>
 
             <div class="col-sm-12 col-md-6">
@@ -216,7 +216,7 @@
 
             <div class="col-sm-12 col-md-6">
                 <label for="covid_infected_end" class="form-label">Hasil Test PCR/Antigen <span class="text-danger">*</span></label>
-                <input type="file" name="covid_infected_end" id="covid_infected_end" class="form-control" required>
+                <input type="file" accept="image/*" name="covid_infected_end" id="covid_infected_end" class="form-control" required>
             </div>
         </div>`;
 

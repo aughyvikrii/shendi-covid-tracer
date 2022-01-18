@@ -10,6 +10,7 @@ class Person extends Model
     use HasFactory;
 
     protected $guarded = ["id"];
+    public $timestamps = false;
 
     public function scopeNik($query, $nik, $match = true) {
         return $match ? $query->where('nik', (int) $nik) : $query->whereRaw('nik LIKE ?', "%". (int) $nik ."%");
@@ -55,5 +56,9 @@ class Person extends Model
 
     public function blood_type() {
         return $this->hasOne(BloodType::class, 'id', 'blood_type_id');
+    }
+
+    public function registrations() {
+        return $this->hasMany(Registration::class, 'patient_id');
     }
 }

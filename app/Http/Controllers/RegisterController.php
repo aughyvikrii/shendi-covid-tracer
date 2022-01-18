@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+use DB;
+
 use App\Models\{
     Person,
     Gender,
     Religion,
     BloodType,
-    MaritalStatus
+    MaritalStatus,
+    Registration
 };
 
 class RegisterController extends Controller
@@ -58,6 +61,7 @@ class RegisterController extends Controller
 
         $input = $valid->validated();
 
+        DB::BeginTransaction();
         
         try {
 
@@ -68,7 +72,7 @@ class RegisterController extends Controller
             if($covid_status === 'being_infected') {
                 $valid = Validator::make($request->all(), [
                     'infected_date_start' => 'required|date',
-                    'covid_infected_start' => 'required|mimes:png,jpg,jpeg,csv,txt,xlx,xls,pdf'
+                    'covid_infected_start' => 'required|image|mimes:jpeg,png,jpg,gif'
                 ]);
 
                 $valid_extend_input = true;
@@ -76,9 +80,9 @@ class RegisterController extends Controller
             else if ($covid_status === 'been_infected') {
                 $valid = Validator::make($request->all(), [
                     'infected_date_start' => 'required|date',
-                    'covid_infected_start' => 'required|mimes:png,jpg,jpeg,csv,txt,xlx,xls,pdf',
+                    'covid_infected_start' => 'required|image|mimes:jpeg,png,jpg,gif',
                     'infected_date_end' => 'required|date',
-                    'covid_infected_end' => 'required|mimes:png,jpg,jpeg,csv,txt,xlx,xls,pdf',
+                    'covid_infected_end' => 'required|image|mimes:jpeg,png,jpg,gif',
                 ]);
 
                 $valid_extend_input = true;
@@ -89,42 +93,6 @@ class RegisterController extends Controller
                     ->with('error', 'Input tidak valid')
                     ->withInput($request->all())
                     ->withErrors($valid->errors());
-            } else if ($valid_extend_input) {
-
-                if($covid_status === 'being_infected') {
-                    $input['infected_date_start'] = date('Y-m-d', strtotime($request->input('infected_date_start', date('Y-m-d'))));
-
-                    if(!$covid_infected_start = upload_file('covid_infected_start', $request)) {
-                        return redirect()->route('register')
-                            ->with('error', 'Gagal upload bukti covid')
-                            ->withInput($request->all())
-                            ->withErrors($valid->errors());
-                    }
-
-                    $input['covid_infected_start'] = $covid_infected_start;
-                }
-                else if ($covid_status === 'been_infected') {
-                    $input['infected_date_start'] = date('Y-m-d', strtotime($request->input('infected_date_start', date('Y-m-d'))));
-                    $input['infected_date_end'] = date('Y-m-d', strtotime($request->input('infected_date_end', date('Y-m-d'))));
-
-                    if(!$covid_infected_start = upload_file('covid_infected_start', $request)) {
-                        return redirect()->route('register')
-                            ->with('error', 'Gagal upload bukti covid')
-                            ->withInput($request->all())
-                            ->withErrors($valid->errors());
-                    }
-
-                    $input['covid_infected_start'] = $covid_infected_start;
-
-                    if(!$covid_infected_end = upload_file('covid_infected_end', $request)) {
-                        return redirect()->route('register')
-                            ->with('error', 'Gagal upload bukti covid')
-                            ->withInput($request->all())
-                            ->withErrors($valid->errors());
-                    }
-
-                    $input['covid_infected_end'] = $covid_infected_end;
-                }
             }
 
             $input['covid_status'] = $covid_status;
@@ -132,10 +100,62 @@ class RegisterController extends Controller
 
             $person = Person::create($input);
 
+            if ($valid_extend_input) {
+
+                $register_data = [
+                    'patient_id' => $person->id,
+                ];
+
+                if($covid_status === 'being_infected') {
+                    $register_data['infected_date_start'] = date('Y-m-d', strtotime($request->input('infected_date_start', date('Y-m-d'))));
+
+                    if(!$covid_infected_start = upload_file('covid_infected_start', $request)) {
+                        DB::Rollback();
+                        return redirect()->route('register')
+                            ->with('error', 'Gagal upload bukti covid')
+                            ->withInput($request->all())
+                            ->withErrors($valid->errors());
+                    }
+
+                    $register_data['covid_infected_start'] = $covid_infected_start;
+                }
+                else if ($covid_status === 'been_infected') {
+                    $register_data['infected_date_start'] = date('Y-m-d', strtotime($request->input('infected_date_start', date('Y-m-d'))));
+                    $register_data['infected_date_end'] = date('Y-m-d', strtotime($request->input('infected_date_end', date('Y-m-d'))));
+
+                    if(!$covid_infected_start = upload_file('covid_infected_start', $request)) {
+                        DB::Rollback();
+                        return redirect()->route('register')
+                            ->with('error', 'Gagal upload bukti covid')
+                            ->withInput($request->all())
+                            ->withErrors($valid->errors());
+                    }
+
+                    $register_data['covid_infected_start'] = $covid_infected_start;
+
+                    if(!$covid_infected_end = upload_file('covid_infected_end', $request)) {
+                        DB::Rollback();
+                        return redirect()->route('register')
+                            ->with('error', 'Gagal upload bukti covid')
+                            ->withInput($request->all())
+                            ->withErrors($valid->errors());
+                    }
+
+                    $register_data['covid_infected_end'] = $covid_infected_end;
+                }
+
+                Registration::create($register_data);
+            }
+
+            DB::Commit();
+
             return redirect()->route('kk', $person->kk)
                 ->with('success', 'Pasien berhasil ditambahkan');
 
         } catch (\Exception $e) {
+
+            DB::Rollback();
+
             return redirect()->route('register')
                 ->with('error', $e->getMessage())
                 ->withInput($request->all())
@@ -146,9 +166,9 @@ class RegisterController extends Controller
     public function update_covid_status ($id, Request $request) {
         try {
 
-            $person = Person::find($id);
+            $registration = Registration::find($id);
 
-            $input['covid_status'] = 'been_infected';
+            $input['infection_status'] = 'healed';
             $input['infected_date_end'] = date('Y-m-d', strtotime($request->input('infected_date_end', date('Y-m-d'))));
 
             if(!$covid_infected_end = upload_file('covid_infected_end', $request)) {
@@ -159,7 +179,12 @@ class RegisterController extends Controller
 
             $input['covid_infected_end'] = $covid_infected_end;
 
-            $person->update($input);
+            $registration->update($input);
+
+
+            $registration->patient->update([
+                'covid_status' => 'been_infected',
+            ]);
 
             return redirect()->back()
                 ->with('success', 'Berhasil update status covid')
@@ -168,6 +193,99 @@ class RegisterController extends Controller
             return redirect()->back()
                 ->with('error', $e->getMessage())
                 ->withInput($request->all());
+        }
+    }
+
+    public function register_patient(Request $request) {
+        $patient = Person::find($request->patient_id);
+        
+        if(!$patient) {
+            return redirect()->back()
+                ->with('warning', "NIK/KK {$param} tidak tercatat di database");
+        }
+
+        $covid_status = $request->input('covid_status', 'never_infected');
+        $covid_status = in_array($covid_status, ['never_infected', 'being_infected', 'been_infected']) ? $covid_status : 'never_infected';
+
+        $valid_extend_input = false;
+        if($covid_status === 'being_infected') {
+            $valid = Validator::make($request->all(), [
+                'infected_date_start' => 'required|date',
+                'covid_infected_start' => 'required|image|mimes:jpeg,png,jpg,gif'
+            ]);
+
+            $valid_extend_input = true;
+        }
+        else if ($covid_status === 'been_infected') {
+            $valid = Validator::make($request->all(), [
+                'infected_date_start' => 'required|date',
+                'covid_infected_start' => 'required|image|mimes:jpeg,png,jpg,gif',
+                'infected_date_end' => 'required|date',
+                'covid_infected_end' => 'required|image|mimes:jpeg,png,jpg,gif',
+            ]);
+
+            $valid_extend_input = true;
+        }
+
+        if($valid_extend_input && $valid->fails()) {
+                return redirect()->back()
+                    ->with('error', 'Input tidak valid')
+                    ->withInput($request->all())
+                    ->withErrors($valid->errors());
+        }
+
+        if ($valid_extend_input) {
+
+            $register_data = [
+                'patient_id' => $patient->id,
+            ];
+
+            if($covid_status === 'being_infected') {
+                $register_data['infected_date_start'] = date('Y-m-d', strtotime($request->input('infected_date_start', date('Y-m-d'))));
+
+                if(!$covid_infected_start = upload_file('covid_infected_start', $request)) {
+                    DB::Rollback();
+                    return redirect()->back()
+                        ->with('error', 'Gagal upload bukti covid')
+                        ->withInput($request->all())
+                        ->withErrors($valid->errors());
+                }
+
+                $register_data['covid_infected_start'] = $covid_infected_start;
+            }
+            else if ($covid_status === 'been_infected') {
+                $register_data['infected_date_start'] = date('Y-m-d', strtotime($request->input('infected_date_start', date('Y-m-d'))));
+                $register_data['infected_date_end'] = date('Y-m-d', strtotime($request->input('infected_date_end', date('Y-m-d'))));
+
+                if(!$covid_infected_start = upload_file('covid_infected_start', $request)) {
+                    DB::Rollback();
+                    return redirect()->back()
+                        ->with('error', 'Gagal upload bukti covid')
+                        ->withInput($request->all())
+                        ->withErrors($valid->errors());
+                }
+
+                $register_data['covid_infected_start'] = $covid_infected_start;
+
+                if(!$covid_infected_end = upload_file('covid_infected_end', $request)) {
+                    DB::Rollback();
+                    return redirect()->back()
+                        ->with('error', 'Gagal upload bukti covid')
+                        ->withInput($request->all())
+                        ->withErrors($valid->errors());
+                }
+
+                $register_data['covid_infected_end'] = $covid_infected_end;
+            }
+
+            Registration::create($register_data);
+
+            $patient->update([
+                'covid_status' => $covid_status
+            ]);
+
+            return redirect()->back()
+                ->with('success', 'Berhasil menambah data');
         }
     }
 }
