@@ -3,6 +3,7 @@ body {
     background-color: #cccccc;
     height: 100vh;
     display: flex;
+    flex-direction: column;
 }
 
 .logo {

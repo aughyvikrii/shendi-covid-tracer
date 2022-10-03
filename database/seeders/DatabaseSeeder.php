@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
             TableBloodType::class,
             TableReligion::class,
             TableGender::class,
-            TableMaritalStatus::class
+            TableMaritalStatus::class,
+            SeedTableUser::class,
         ]);
     }
 }
